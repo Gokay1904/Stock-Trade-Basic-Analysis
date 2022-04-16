@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import style
 import matplotlib as pt
 import datetime,time
 import numpy as np
@@ -7,24 +8,31 @@ import re, requests
 import json
 
 
-symbols= ["IBM", "MSFT", "APPL"]
-
-
+symbols= ["IBM", "MSFT","TSLA"]
+sharpe_ratios = {}
+stocks = {}
 _params = {
-            "symbol":"AAPL",
-            "apikey":"VIIFUUVM2CJN6WRL",
+            "symbol":"Default",
+            "apikey":"NONE",
             "adjust":False,
             "function":"TIME_SERIES_DAILY"
 }
+i= 0
+for s in symbols:
+    _params["symbol"] = s
 
-response = requests.get("https://www.alphavantage.co/query?",params = _params)
+    response = requests.get("https://www.alphavantage.co/query?", params=_params)
+    stock_df = response.json()
+    print(stock_df)
+    stock_with_time_and_close_price = {datetime.datetime.strptime(key, "%Y-%m-%d"): float(value["4. close"]) for (key, value) in stock_df['Time Series (Daily)'].items()}
+
+    stocks[f"{s}"] = stock_with_time_and_close_price
 
 
-stock_df = response.json()
 
 
-combined_dict = {datetime.datetime.strptime(key, "%Y-%m-%d"): float(value["4. close"]) for (key,value) in stock_df['Time Series (Daily)'].items()}
-days = np.array(list(combined_dict.keys()))
+
+
 
 def calculate_SHARPE(stock_dict,risk_free_rate = 0):
     '''<1 – Not good
@@ -69,30 +77,96 @@ def calculate_EMA(stock_dict,days, smoothing = 2):
 
 
 
-print(calculate_SHARPE(combined_dict))
-Day_7EMA = calculate_EMA(combined_dict,7)
-Day_30EMA = calculate_EMA(combined_dict,30)
 
 
-fig, ax = plt.subplots(figsize = (10,4))
-
-ax.plot(combined_dict.keys(),combined_dict.values(),label="Closing Price")
-ax.plot(Day_7EMA["days"],Day_7EMA["ema"], label="7 DAY EMA")
-ax.plot(Day_30EMA["days"],Day_30EMA["ema"], label="30 DAY EMA")
-plt.ylabel('30-Date EMA')
 
 
-ax.set_title('TSLA Price Graph')
+#fig,ax  = plt.subplots(figsize = (10,4))
+#
+#ax.plot(current_stock.keys(),current_stock.values(),label="Closing Price")
+#ax.plot(Day_7EMA["days"],Day_7EMA["ema"], label="7 DAY EMA")
+#ax.plot(Day_30EMA["days"],Day_30EMA["ema"], label="30 DAY EMA")
+#plt.ylabel('30-Date EMA')
+#
+#
+#ax.set_title('TSLA Price Graph')
+#
+#plt.xlabel('Dates')
+#plt.ylabel('Price')
+#plt.legend()
+#plt.xticks(rotation=90)
 
-plt.xlabel('Dates')
-plt.ylabel('Price')
-plt.legend()
-plt.xticks(rotation=90)
+for s in symbols:
+    current_stock = stocks[s]
+    print(current_stock)
+
+def Print_Shares(shares_dict):
+
+    i = 0
+    j = 0
+    rowNum = 1
+    colNum = 3
+
+    fig, axs = plt.subplots(nrows=2,ncols=3)
+
+    plt.style.use('Solarize_Light2')
+
+
+    for s in symbols:
+       current_stock = shares_dict[s]
+
+       #days = np.array(list(current_stock.keys()))
+
+       sharpe = calculate_SHARPE(current_stock)
+       print(f"Shape ratio for {s}: {calculate_SHARPE(current_stock)}")
+       sharpe_ratios[s] = sharpe
+
+       Day_7EMA = calculate_EMA(current_stock, 7)
+       Day_30EMA = calculate_EMA(current_stock, 30)
+
+
+       current_ax = axs[i,j]
+
+       current_ax.set_title(f"{s} Closed Price Graph")
+
+       current_ax.plot(current_stock.keys(),current_stock.values())
+       #PLOT EMA's
+       current_ax.plot(Day_7EMA["days"], Day_7EMA["ema"], label="7 DAY EMA")
+       current_ax.plot(Day_30EMA["days"], Day_30EMA["ema"], label="30 DAY EMA")
+       current_ax.text(3, 3, f'SHARPE RATIO: {sharpe}',fontsize = 20)
+       current_ax.set_title(f"{s} Closed Price Graph")
+       # PLOT Labels
+       current_ax.set_ylabel('30-Date EMA')
+       current_ax.set_xlabel('Dates')
+       current_ax.set_ylabel('Price')
+
+       # LEGEND
+       current_ax.legend()
+
+       plt.style.use('Solarize_Light2')
+
+       # Rotate X 90 degree
+       plt.xticks(rotation=90)
+
+       # Next Iteration
+       j = j+1
+
+
+Print_Shares(stocks)
+
+
+def Print_Sharpes(sharpe_dict):
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    plt.style.use('Solarize_Light2')
+
+    ax.bar(sharpe_dict.keys(),sharpe_dict.values())
+    plt.draw()
+
+
+Print_Sharpes(sharpe_ratios)
+
 
 plt.show()
-
-
-
-
 
 
