@@ -1,37 +1,32 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import style
-import matplotlib as pt
 import datetime,time
 import numpy as np
 import re, requests
 import json
 
 
-symbols= ["IBM", "MSFT","TSLA"]
+symbols= ["IBM", "MSFT","TSLA", "XON"]
 sharpe_ratios = {}
 stocks = {}
 _params = {
             "symbol":"Default",
-            "apikey":"NONE",
+            "apikey":"",
             "adjust":False,
             "function":"TIME_SERIES_DAILY"
 }
-i= 0
-for s in symbols:
-    _params["symbol"] = s
 
-    response = requests.get("https://www.alphavantage.co/query?", params=_params)
-    stock_df = response.json()
-    print(stock_df)
-    stock_with_time_and_close_price = {datetime.datetime.strptime(key, "%Y-%m-%d"): float(value["4. close"]) for (key, value) in stock_df['Time Series (Daily)'].items()}
+def Add_And_Filter_Stocks():
+    for s in symbols:
+        _params["symbol"] = s
 
-    stocks[f"{s}"] = stock_with_time_and_close_price
+        response = requests.get("https://www.alphavantage.co/query?", params=_params)
+        stock_df = response.json()
+        print(stock_df)
+        stock_with_time_and_close_price = {datetime.datetime.strptime(key, "%Y-%m-%d"): float(value["4. close"]) for (key, value) in stock_df['Time Series (Daily)'].items()}
 
-
-
-
-
+        stocks[f"{s}"] = stock_with_time_and_close_price
 
 
 def calculate_SHARPE(stock_dict,risk_free_rate = 0):
@@ -52,7 +47,7 @@ def percentage_change(stock_dict):
     pct_change_array = np.zeros(len(prices))
     for x in range(0,len(prices)-1):
         pct_change = ((prices[x] - prices[x+1])/prices[x] * 100)
-        print(f"day,{list(stock_dict.keys())[x]},{pct_change}")
+        #print(f"day,{list(stock_dict.keys())[x]},{pct_change}")
         pct_change_array[x] = pct_change
 
 
@@ -96,6 +91,10 @@ def calculate_EMA(stock_dict,days, smoothing = 2):
 #plt.legend()
 #plt.xticks(rotation=90)
 
+
+Add_And_Filter_Stocks()
+
+#For Debugging
 for s in symbols:
     current_stock = stocks[s]
     print(current_stock)
@@ -104,10 +103,10 @@ def Print_Shares(shares_dict):
 
     i = 0
     j = 0
-    rowNum = 1
+    rowNum = 2
     colNum = 3
 
-    fig, axs = plt.subplots(nrows=2,ncols=3)
+    fig, axs = plt.subplots(rowNum,colNum)
 
     plt.style.use('Solarize_Light2')
 
@@ -151,6 +150,11 @@ def Print_Shares(shares_dict):
        # Next Iteration
        j = j+1
 
+       if(j==colNum):
+            j=0
+            if(i <= rowNum-1):
+                i = i+1
+
 
 Print_Shares(stocks)
 
@@ -162,11 +166,18 @@ def Print_Sharpes(sharpe_dict):
 
     ax.bar(sharpe_dict.keys(),sharpe_dict.values())
     plt.draw()
+    plt.title("Sharpe Ratios for Stocks")
+    plt.figtext(0,0,"<1 – Not good 1-1.99 – Ok 2-2.99 – Really good >3 – Exceptional",fontsize = 10)
 
 
 Print_Sharpes(sharpe_ratios)
 
 
 plt.show()
+
+
+
+
+
 
 
