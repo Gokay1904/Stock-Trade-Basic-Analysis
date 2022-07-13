@@ -6,7 +6,7 @@ import numpy as np
 import re, requests
 import json
 
-
+#USE Your Alphavantage API key first.
 symbols= ["IBM", "MSFT","TSLA", "XON"]
 sharpe_ratios = {}
 stocks = {}
