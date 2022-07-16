@@ -70,28 +70,6 @@ def calculate_EMA(stock_dict,days, smoothing = 2):
 
     return ema_by_days
 
-
-
-
-
-
-
-#fig,ax  = plt.subplots(figsize = (10,4))
-#
-#ax.plot(current_stock.keys(),current_stock.values(),label="Closing Price")
-#ax.plot(Day_7EMA["days"],Day_7EMA["ema"], label="7 DAY EMA")
-#ax.plot(Day_30EMA["days"],Day_30EMA["ema"], label="30 DAY EMA")
-#plt.ylabel('30-Date EMA')
-#
-#
-#ax.set_title('TSLA Price Graph')
-#
-#plt.xlabel('Dates')
-#plt.ylabel('Price')
-#plt.legend()
-#plt.xticks(rotation=90)
-
-
 Add_And_Filter_Stocks()
 
 #For Debugging
@@ -155,9 +133,7 @@ def Print_Shares(shares_dict):
             if(i <= rowNum-1):
                 i = i+1
 
-
 Print_Shares(stocks)
-
 
 def Print_Sharpes(sharpe_dict):
 
